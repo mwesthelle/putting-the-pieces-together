@@ -1,0 +1,210 @@
+% This file was created with JabRef 2.9.2.
+% Encoding: UTF8
+
+@INPROCEEDINGS{peters-etal-2018-deep,
+    title = "Deep Contextualized Word Representations",
+    author = "Peters, Matthew E.  and
+      Neumann, Mark  and
+      Iyyer, Mohit  and
+      Gardner, Matt  and
+      Clark, Christopher  and
+      Lee, Kenton  and
+      Zettlemoyer, Luke",
+    booktitle = "Proceedings of the 2018 Conference of the North {A}merican Chapter of the Association for Computational Linguistics: Human Language Technologies, Volume 1 (Long Papers)",
+    month = jun,
+    year = "2018",
+    address = "New Orleans, Louisiana",
+    publisher = "Association for Computational Linguistics",
+    url = "https://aclanthology.org/N18-1202",
+    doi = "10.18653/v1/N18-1202",
+    pages = "2227--2237",
+    abstract = "We introduce a new type of deep contextualized word representation that models both (1) complex characteristics of word use (e.g., syntax and semantics), and (2) how these uses vary across linguistic contexts (i.e., to model polysemy). Our word vectors are learned functions of the internal states of a deep bidirectional language model (biLM), which is pre-trained on a large text corpus. We show that these representations can be easily added to existing models and significantly improve the state of the art across six challenging NLP problems, including question answering, textual entailment and sentiment analysis. We also present an analysis showing that exposing the deep internals of the pre-trained network is crucial, allowing downstream models to mix different types of semi-supervision signals.",
+}
+
+@INNPROCEEDINGS{sennrich-etal-2016-neural,
+    title = "Neural Machine Translation of Rare Words with Subword Units",
+    author = "Sennrich, Rico  and
+      Haddow, Barry  and
+      Birch, Alexandra",
+    booktitle = "Proceedings of the 54th Annual Meeting of the Association for Computational Linguistics (Volume 1: Long Papers)",
+    month = aug,
+    year = "2016",
+    address = "Berlin, Germany",
+    publisher = "Association for Computational Linguistics",
+    url = "https://aclanthology.org/P16-1162",
+    doi = "10.18653/v1/P16-1162",
+    pages = "1715--1725",
+}
+
+
+@ARTICLE{Wu2016GooglesNM,
+    title={Google's Neural Machine Translation System: Bridging the Gap between Human and Machine Translation},
+    author={Yonghui Wu and Mike Schuster and Z. Chen and Quoc V. Le and Mohammad Norouzi and Wolfgang Macherey and Maxim Krikun and Yuan Cao and Qin Gao and Klaus Macherey and Jeff Klingner and Apurva Shah and Melvin Johnson and Xiaobing Liu and Lukasz Kaiser and Stephan Gouws and Yoshikiyo Kato and Taku Kudo and Hideto Kazawa and Keith Stevens and George Kurian and Nishant Patil and Wei Wang and Cliff Young and Jason R. Smith and Jason Riesa and Alex Rudnick and Oriol Vinyals and Gregory S. Corrado and Macduff Hughes and Jeffrey Dean},
+    journal={ArXiv},
+    year={2016},
+    volume={abs/1609.08144}
+}
+
+@ARTICLE{johnson-etal-2017-googles,
+    title = "{G}oogle{'}s Multilingual Neural Machine Translation System: Enabling Zero-Shot Translation",
+    author = "Johnson, Melvin  and
+      Schuster, Mike  and
+      Le, Quoc V.  and
+      Krikun, Maxim  and
+      Wu, Yonghui  and
+      Chen, Zhifeng  and
+      Thorat, Nikhil  and
+      Vi{\'e}gas, Fernanda  and
+      Wattenberg, Martin  and
+      Corrado, Greg  and
+      Hughes, Macduff  and
+      Dean, Jeffrey",
+    journal = "Transactions of the Association for Computational Linguistics",
+    volume = "5",
+    year = "2017",
+    address = "Cambridge, MA",
+    publisher = "MIT Press",
+    url = "https://aclanthology.org/Q17-1024",
+    doi = "10.1162/tacl_a_00065",
+    pages = "339--351",
+    abstract = "We propose a simple solution to use a single Neural Machine Translation (NMT) model to translate between multiple languages. Our solution requires no changes to the model architecture from a standard NMT system but instead introduces an artificial token at the beginning of the input sentence to specify the required target language. Using a shared wordpiece vocabulary, our approach enables Multilingual NMT systems using a single model. On the WMT{'}14 benchmarks, a single multilingual model achieves comparable performance for English→French and surpasses state-of-theart results for English→German. Similarly, a single multilingual model surpasses state-of-the-art results for French→English and German→English on WMT{'}14 and WMT{'}15 benchmarks, respectively. On production corpora, multilingual models of up to twelve language pairs allow for better translation of many individual pairs. Our models can also learn to perform implicit bridging between language pairs never seen explicitly during training, showing that transfer learning and zero-shot translation is possible for neural translation. Finally, we show analyses that hints at a universal interlingua representation in our models and also show some interesting examples when mixing languages.",
+}
+
+@INPROCEEDINGS{klein-tsarfaty-2020-getting,
+    title = "Getting the {\#}{\#}life out of living: How Adequate Are Word-Pieces for Modelling Complex Morphology?",
+    author = "Klein, Stav  and
+      Tsarfaty, Reut",
+    booktitle = "Proceedings of the 17th SIGMORPHON Workshop on Computational Research in Phonetics, Phonology, and Morphology",
+    month = jul,
+    year = "2020",
+    address = "Online",
+    publisher = "Association for Computational Linguistics",
+    url = "https://aclanthology.org/2020.sigmorphon-1.24",
+    doi = "10.18653/v1/2020.sigmorphon-1.24",
+    pages = "204--209",
+    abstract = "This work investigates the most basic units that underlie contextualized word embeddings, such as BERT {---} the so-called word pieces. In Morphologically-Rich Languages (MRLs) which exhibit morphological fusion and non-concatenative morphology, the different units of meaning within a word may be fused, intertwined, and cannot be separated linearly. Therefore, when using word-pieces in MRLs, we must consider that: (1) a linear segmentation into sub-word units might not capture the full morphological complexity of words; and (2) representations that leave morphological knowledge on sub-word units inaccessible might negatively affect performance. Here we empirically examine the capacity of word-pieces to capture morphology by investigating the task of multi-tagging in Modern Hebrew, as a proxy to evaluate the underlying segmentation. Our results show that, while models trained to predict multi-tags for complete words outperform models tuned to predict the distinct tags of WPs, we can improve the WPs tag prediction by purposefully constraining the word-pieces to reflect their internal functions. We suggest that linguistically-informed word-pieces schemes, that make the morphological structure explicit, might boost performance for MRLs.",
+}
+
+@INPROCEEDINGS{creutz-lagus-2002-unsupervised,
+    title = "Unsupervised Discovery of Morphemes",
+    author = "Creutz, Mathias  and
+      Lagus, Krista",
+    booktitle = "Proceedings of the {ACL}-02 Workshop on Morphological and Phonological Learning",
+    month = jul,
+    year = "2002",
+    publisher = "Association for Computational Linguistics",
+    url = "https://aclanthology.org/W02-0603",
+    doi = "10.3115/1118647.1118650",
+    pages = "21--30",
+}
+
+@ARTICLE{firth57synopsis,
+    abstract = {Reprinted in:  Palmer, F. R. (ed.) (1968). Selected Papers of J. R. Firth 1952-59, pages 168-205. Longmans, London. },
+    added-at = {2008-05-14T00:52:58.000+0200},
+    address = {Oxford},
+    author = {Firth, J. R.},
+    biburl = {https://www.bibsonomy.org/bibtex/25e3d6c72cdd123a638f71886d78f3c1e/brightbyte},
+    booktitle = {Studies in Linguistic Analysis (special volume of the Philological Society)},
+    interhash = {b4f769667fdd195b4a75f61f6388a52e},
+    intrahash = {5e3d6c72cdd123a638f71886d78f3c1e},
+    keywords = {classic linguistics meanign relatedness semantic},
+    pages = {1-32},
+    publisher = {The Philological Society},
+    timestamp = {2009-01-23T09:58:50.000+0100},
+    title = {A synopsis of linguistic theory 1930-55.},
+    volume = {1952-59},
+    year = 1957
+}
+
+@INPROCEEDINGS{Hofmann2021SuperbizarreIN,
+    title={Superbizarre Is Not Superb: Derivational Morphology Improves BERT's Interpretation of Complex Words},
+    author={Valentin Hofmann and Janet B. Pierrehumbert and Hinrich Sch{\"u}tze},
+    booktitle={ACL/IJCNLP},
+    year={2021}
+}
+
+@INPROCEEDINGS{Virpioja2013Morfessor2P,
+    title={Morfessor 2.0: Python Implementation and Extensions for Morfessor Baseline},
+    author={Sami Virpioja and Peter Smit and Stig-Arne Gr{\"o}nroos and Mikko Kurimo},
+    year={2013}
+}
+
+@INPROCEEDINGS{Creutz04inductionof,
+    author = {Mathias Creutz and Krista Lagus},
+    title = {Induction of a simple morphology for highly-inflecting languages},
+    booktitle = {IN PROCEEDINGS OF THE 7TH MEETING OF THE ACL SPECIAL INTEREST GROUP IN COMPUTATIONAL PHONOLOGY (SIGPHON},
+    year = {2004},
+    pages = {43--51},
+    publisher = {}
+}
+
+@INPROCEEDINGS{Creutz05inducingthe,
+    author = {Mathias Creutz and Krista Lagus},
+    title = {Inducing the Morphological Lexicon of a Natural Language from Unannotated Text},
+    booktitle = {In Proceedings of the International and Interdisciplinary Conference on Adaptive Knowledge Representation and Reasoning (AKRR’05},
+    year = {2005},
+    pages = {106--113}
+}
+
+@INPROCEEDINGS{Creutz05unsupervisedmorpheme,
+    author = {Mathias Creutz and Krista Lagus},
+    title = {Unsupervised morpheme segmentation and morphology induction from text corpora using Morfessor 1.0},
+    booktitle = {Helsinki University of Technology},
+    year = {2005}
+}
+
+@ARTICLE{creutz-lagus-2007-unsupervised,
+    author = {Creutz, Mathias and Lagus, Krista},
+    year = {2007},
+    month = {01},
+    pages = {},
+    title = {Unsupervised models for morpheme segmentation and morphology learning},
+    volume = {4},
+    journal = {TSLP},
+    doi = {10.1145/1217098.1217101}
+}
+
+@ARTICLE{morphology-matters-tacl-2021,
+    author = {Park, Hyunji Hayley and Zhang, Katherine J. and Haley, Coleman and Steimel, Kenneth and Liu, Han and Schwartz, Lane},
+    title = "{Morphology Matters: A Multilingual Language Modeling Analysis}",
+    journal = {Transactions of the Association for Computational Linguistics},
+    volume = {9},
+    pages = {261-276},
+    year = {2021},
+    month = {03},
+    abstract = "{Prior studies in multilingual language modeling (e.g., Cotterell et al., 2018; Mielke et al., 2019) disagree on whether or not inflectional morphology makes languages harder to model. We attempt to resolve the disagreement and extend those studies. We compile a larger corpus of 145 Bible translations in 92 languages and a larger number of typological features.1 We fill in missing typological data for several languages and consider corpus-based measures of morphological complexity in addition to expert-produced typological features. We find that several morphological measures are significantly associated with higher surprisal when LSTM models are trained with BPE-segmented data. We also investigate linguistically motivated subword segmentation strategies like Morfessor and Finite-State Transducers (FSTs) and find that these segmentation strategies yield better performance and reduce the impact of a language’s morphology on language modeling.}",
+    issn = {2307-387X},
+    doi = {10.1162/tacl_a_00365},
+    url = {https://doi.org/10.1162/tacl\_a\_00365},
+    eprint = {https://direct.mit.edu/tacl/article-pdf/doi/10.1162/tacl\_a\_00365/1924158/tacl\_a\_00365.pdf},
+}
+
+@INPROCEEDINGS{a-neural-probabilistic-lm,
+author = {Bengio, Y. and Ducharme, Réjean and Vincent, Pascal},
+year = {2000},
+month = {01},
+pages = {932-938},
+title = {A Neural Probabilistic Language Model},
+volume = {3},
+journal = {Journal of Machine Learning Research},
+doi = {10.1162/153244303322533223}
+}
+
+@ONLINE{morph-typology,
+author = {{Jonathan Manker}},
+title = {Morphological Typology},
+url = {https://linguistics.berkeley.edu/~jtmanker/Morphological\%20Typology\%20-\%20Spring\%202016\%20-\%20Ling\%20100\%20Guest\%20Lecture.pdf},
+organization = {University of California, Berkeley},
+date = {2016-02-26},
+urldate = {2022-02-16}
+}
+
+@comment{jabref-meta: selector_keywords:}
+
+@comment{jabref-meta: selector_journal:}
+
+@comment{jabref-meta: selector_publisher:}
+
+@comment{jabref-meta: selector_author:}
+
+@comment{jabref-meta: selector_review:}
