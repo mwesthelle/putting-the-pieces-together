@@ -39,11 +39,31 @@
 
 \usepackage[alf,abnt-emphasize=bf]{abntex2cite}	% pacote para usar citações abnt
 
+\usepackage{algorithm}
+\usepackage{algpseudocode}
 \usepackage{amsmath}
 \usepackage{amssymb}
+\usepackage{caption}
+\usepackage{siunitx}
+\usepackage{subfigure}
+\usepackage{svg}
 \usepackage{tipa}
+\usepackage{url}
 
 
+\algrenewcommand\algorithmicprocedure{\textbf{Procedimento}}
+\algrenewcommand\algorithmicwhile{\textbf{enquanto}}
+\algrenewcommand\algorithmicdo{\textbf{faça}}
+\algrenewcommand\algorithmicend{\textbf{fim}}
+\algrenewcommand\algorithmicreturn{\textbf{Retorna}}
+
+\makeatletter
+\renewcommand{\ALG@name}{Algoritmo}
+\makeatother
+
+
+
+  
 % 
 % Informações gerais
 % 
@@ -102,8 +122,8 @@
 % palavras-chave
 % iniciar todas com letras minúsculas, exceto no caso de abreviaturas
 % 
-\keyword{Processamento de Linguagem Natural}
-\keyword{Linguística Computacional}
+\keyword{Processamento de linguagem natural}
+\keyword{Linguística computacional}
 \keyword{Representações de palavras}
 \keyword{Aprendizado de máquina}
 
@@ -138,14 +158,14 @@
 
 % resumo na língua do documento
 \begin{abstract}
-    Lorem ipsum
+    Modelos de linguagem pré-treinados oferecem o melhor desempenho em várias tarefas de processamento de linguagem natural. Uma das técnicas empregadas neles é a segmentação de palavras em sub-palavras, sequências de caracteres menores nas quais palavras são segmentadas. Esta segmentação permite o uso de um vocabulário reduzido e resolve o problema de tokens fora de vocabulário. Entretanto, os métodos de segmentação em sub-palavras comumente usados não têm nenhum embasamento linguístico. Nos perguntamos se o estudo da estrutura interna da palavra, a morfologia, pode oferecer antecedentes informados a estes modelos que melhorem sua performance em tarefas comuns. Incorporamos um método não-supervisionado de descoberta de morfemas em uma nova abordagem de segmentação para testar nossa hipótese, e obtivemos resultados mistos comparados ao nosso \emph{baseline}, o tokenizador WordPiece.
 \end{abstract}
 
 % resumo na outra língua
 % como parametros devem ser passados o titulo e as palavras-chave
 % na outra língua, separadas por vírgulas
 \begin{englishabstract}{Putting the Pieces Together - investigating the impact of morphological segmentation in BERT}{Natural Language Processing. Computational Linguistics. Word representations. Machine Learning}
-    Lorem ipsum
+    Pretrained Language Models offer the best performance in many natural language processing tasks. One of the techniques used by them is the segmentation of words into sub-words, smaller sequences of characters that words are broken down into. This segmentation allows the use of a smaller vocabulary and solves the problem of out-of-vocabulary tokens. However, commonly used sub-word segmentation methods have no linguistic foundations. We ask ourselves whether the study of internal word structure, morphology, can offer informed priors to these models, such that they perform better in common tasks. We employ an unsupervised morpheme discovery method in a new word segmentation approach to test our hypothesis, and obtain mixed results compared to a WordPiece baseline.
 \end{englishabstract}
 
 % lista de figuras
@@ -156,9 +176,12 @@
 
 % lista de abreviaturas e siglas
 % o parametro deve ser a abreviatura mais longa
-\begin{listofabbrv}{SPMD}
+\begin{listofabbrv}{ALBERT}
+    \item[ALBERT] A Lite BERT
     \item[BERT] Bidirectional Encoder Representations from Transformers
     \item[BPE] Byte Pair Encoding
+    \item[MLM] Masked Language Modeling
+    \item[NSP] Next Sentence Prediction
 \end{listofabbrv}
 
 % idem para a lista de símbolos
@@ -174,63 +197,383 @@
 
 % introducao
 \chapter{Introdução}
-Modelos de \emph{embeddings} de palavras contextualizados \cite{peters-etal-2018-deep} representam o estado da arte em processamento de linguagem natural, apresentando excelente desempenho em muitas tarefas. Uma das razões do sucesso desses modelos é a segmentação de \emph{tokens} em sub-palavras, que permite a esses modelos lidar com palavras fora de vocabulário, além de aprender a generalizar sequências de caracteres frequentes. Dentre as técnicas de segmentação utilizadas, destacam-se \emph{byte pair encoding} \cite{sennrich-etal-2016-neural} e \emph{WordPiece} \cite{Wu2016GooglesNM}. Essas técnicas funcionam muito bem empiricamente, entretanto elas são pouco capazes de codificar morfologia \cite{klein-tsarfaty-2020-getting}.
 
-Inicialmente motivados pelo DelBERT \cite{Hofmann2021SuperbizarreIN}, nós propomos a criação de um modelo que utilize uma técnica alternativa de segmentação que carregue informação morfológica. Para tanto, utilizamos um modelo não supervisionado de descoberta de morfemas \cite{creutz-lagus-2002-unsupervised}, de forma a inserir tal informação em um modelo de \emph{embeddings} contextualizados. Nossa hipótese é de que o modelo seja capaz de computar o significado de palavras fora de seu vocabulário a partir da composição de seus morfemas, da mesma forma que seres humanos o fazem. Nós então propomos avaliar o desempenho deste modelo em uma série de tarefas, como classificação de texto, \emph{textual entailment}, e \emph{question answering}. Por outro lado, também há evidências de que alta complexidade morfológica aumenta a dificuldade na criação de modelos de linguagem, e de que métodos de segmentação linguisticamente motivados reduzem o impacto dessa complexidade \cite{morphology-matters-tacl-2021}.
+Modelos de Linguagem Pré-treinados baseados em \emph{transformers} \cite{vaswani-etal-2017}, como o BERT \cite{devlin-etal-2019-bert}, representam o estado da arte em processamento de linguagem natural, apresentando excelente desempenho em muitas tarefas. Uma das razões do sucesso desses modelos é a segmentação de \emph{tokens} em sub-palavras, que permite a esses modelos lidar com palavras fora de vocabulário, além de aprender a generalizar sequências de caracteres frequentes. Dentre as técnicas de segmentação utilizadas, destacam-se \emph{byte pair encoding} \cite{sennrich-etal-2016-neural} e \emph{WordPiece} \cite{Wu2016GooglesNM}. Essas técnicas funcionam muito bem empiricamente, entretanto elas não têm embasamento linguístico \cite{Church2020May}, e, portanto, são pouco capazes de codificar morfologia \cite{klein-tsarfaty-2020-getting}.
+
+\citet{Hofmann2021SuperbizarreIN} demonstram que o uso de segmentação com informação morfológica é benéfico em casos de palavras complexas, \textit{i.e,} que apresentam afixação. O trabalho, no entanto, se limita ao idioma inglês, e é restringido à morfologia derivacional. A abordagem por eles adotada usa o WordPiece, não alterando o vocabulário, mas modificando a forma como ele é usado. Quando possível, eles separam uma palavra em suas partes, fazem correções morfo-ortográficas com regras simples, e concatenam suas partes com hífens, de forma que uma palavra como \emph{unquestionably} se transformaria em \emph{un-question-able-ly}. O uso de regras de correção morfo-ortográficas específicas para o inglês dificulta a reprodução do trabalho para outros idiomas, especialmente os que apresentam morfologia mais complexa. Nessa situação, a lista de regras cresce rapidamente, justificando a necessidade de especialistas para sua criação. Neste trabalho, levantamos então uma hipótese diferente, mais compatível com idiomas de morfologia complexa: se segmentarmos palavras de acordo com seus morfes, é possível observar uma melhora nas representações geradas? \citet{morphology-matters-tacl-2021} ainda aponta que complexidade morfológica é um fator que dificulta o treinamento de modelos de linguagem, e que métodos de segmentação linguisticamente motivados reduzem o impacto dessa complexidade.
+
+Para corroborar nossa hipótese, treinamos um modelo ALBERT \cite{Lan2020ALBERT} utilizando segmentação morfológica, e avaliamos em uma série de tarefas, comparando-o com outro modelo treinado usando o tradicional WordPiece.
+
+Segmentação morfológica automática é uma tarefa que pode ser realizada de diversas maneiras, cada qual com seus prós e contras. Por um lado, pode ser empregado um sistema de regras para identificação de morfemas; um sistema de regras robusto é a forma mais precisa de segmentação automática, mas também a mais custosa: tal sistema precisaria ser construído a mão por linguistas, exigiria muitas horas de esforço, e seria específico a um idioma apenas. Outra abordagem envolveria um algoritmo de aprendizagem supervisionado, usando um conjunto de dados de segmentações \emph{gold} para treinamento, e generalizando para casos novos; essa abordagem não teria precisão perfeita tal qual um sistema de regras, e ainda requereria a construção de um conjunto de dados. Nós optamos por uma terceira alternativa, usando segmentação de palavras baseada em um modelo não supervisionado de descoberta de morfemas \cite{creutz-lagus-2002-unsupervised}. A natureza não supervisionada do método confere flexibilidade para estender o método para idiomas com poucos recursos: é necessário apenas um corpus.
+
+Fizemos o pré-treino de dois modelos: um utilizando a segmentação WordPiece, e outro empregando a nossa segmentação baseada em morfes candidatos obtidos por um modelo Morfessor em português. Realizamos então o \emph{fine-tuning} de ambos os modelos em quatro conjuntos de dados diferentes. Nossos experimentos apresentaram resultados mistos, explorados no capítulo 4.
+
+No capítulo 2, fornecemos uma base teórica na qual baseamos nossas hipóteses, passando por fundamentos básicos de morfologia, entrando em algoritmos de segmentação de subpalavras, e terminando em modelos de linguagem pré-treinados. No terceiro capítulo, discutimos outros trabalhos que exploram o papel da morfologia em modelos de linguagem, bem como a tarefa de segmentação morfológica em si. No capítulo 4, apresentamos as ferramentas utilizadas para corroborar nossa hipótese, bem como a metodologia empregada. Em seguida, no quinto capítulo, apresentamos nossos resultados e oferecemos uma discussão sobre seus significados. Por fim, no capítulo 6, refletimos sobre as conclusões do trabalho e sobre seus caminhos futuros.
+
 
 \chapter{Fundamentação Teórica}
+Introduziremos aqui os conceitos fundamentais, a partir dos quais não apenas construímos nossa hipótese, mas também obtemos os meios para corroborá-la.
 \section{Morfologia}
 \subsection{Morfemas e morfes}
-Morfemas são comumente definidos como a menor unidade que constitui uma palavra, um átomo de significado. O morfema é ainda uma abstração em relação a morfes, as realizações de um morfema. Um exemplo elucidativo é o morfema \emph{-s}, marcador de plural em português. Ao construirmos o plural de \emph{casa}, simplesmente sufixamos a palavra com \emph{s}: \emph{casa + s $\rightarrow$ casas}. Entretanto, ao considerarmos o plural de \emph{mês} ou \emph{lápis}, observamos diferentes morfes de \emph{-s}: \emph{-es}, em \emph{meses}, e $\varnothing$, em \emph{lápis} \footnote{O caso em que o morfe não é aparente é conhecido como \emph{morfe zero}.}, respectivamente.
+Morfemas são comumente definidos como a menor unidade que constitui uma palavra, um átomo de significado. O morfema é ainda uma abstração em relação a morfes, as realizações de um morfema. Um exemplo elucidativo é o morfema \emph{-s}, marcador de plural em português. Ao construirmos o plural de \emph{casa}, simplesmente sufixamos a palavra com \emph{s}: \emph{casa + -s \rightarrow{} casas}. Entretanto, ao considerarmos o plural de \emph{mês} ou \emph{lápis}, observamos diferentes morfes de \emph{-s}: \emph{-es}, em \emph{meses}, e \varnothing{}, em \emph{lápis} \footnote{O caso em que o morfe não é aparente é conhecido como \emph{morfe zero}.}, respectivamente.
+
+\subsection{Morfologia inflexional e derivacional}
+Morfologia inflexional se refere à afixação para a satisfação de regras sintáticas como número, pessoa, gênero, ou tempo; por exemplo, a adição de \emph{-ou} para expressar o pretérito perfeito. Morfologia derivacional, por outro lado, é o processo de formação de palavras em que a adição de afixos muda o significado da palavra; um exemplo é a adição do sufixo \emph{-ção} para criação de nomes deverbais, como \emph{bater + -ção \rightarrow{} bateção}. Em morfologia derivacional, existe ainda o conceito de \emph{produtividade}; um afixo é dito ser produtivo quando ele pode empregado na criação de palavras novas. Tomemos por exemplo a base \emph{Trump} e o sufixo \emph{-ano}, a partir dos quais podemos formar \emph{Trumpiano}. Dizemos que o sufixo \emph{-ano} é um sufixo produtivo, frequentemente usado para formar adjetivos usando nomes próprios como base. 
 
 \subsection{Segmentação morfológica}
-A tarefa de segmentação morfológica consiste em dividir uma \emph{forma de superfície} em todos os morfes que a compõem. Tomemos um exemplo:
+A tarefa de segmentação morfológica consiste em dividir uma forma de superfície em todos os morfes que a compõem. Tomemos um exemplo:
 
 \begin{center}
-    superbizarro $\rightarrow$ super + bizarr + a
+    superbizarra $\rightarrow$ super + bizarr + -a
 \end{center}
 
 A palavra \emph{superbizarra} pode ser quebrada em três morfes: \emph{super-}, um prefixo; \emph{bizarr}, a raiz da palavra; e \emph{-a}, desinência de gênero.
 
 Identificar os limites de cada morfe de uma palavra é uma tarefa que exige conhecimento linguístico e apresenta alta variabilidade de dificuldade entre línguas. Para línguas isolantes, como o mandarim, a tarefa é trivial, pois predominam morfemas livres, que formam palavras inteiras por si.
 
-Para línguas polissínteticas, como o idioma esquimó Kalaallisut, a tarefa se torna extremamente difícil, pois uma palavra pode conter múltiplas raizes \cite{morph-typology}.
+\begin{center}
+    \begin{tabular}{l}
+        w\v{o} mén dàn gu\`{o} g\={a}ng qín \\
+        w\v{o} - primeira pessoa \\
+        mén - plural \\
+        dàn - tocar \\
+        gu\`{o} - passado \\
+        g\={a}ng qín - piano
+        
+    \end{tabular}
+\end{center}
 
+Para línguas polissínteticas, como o idioma esquimó Kalaallisut, a tarefa se torna mais difícil, pois uma palavra pode conter múltiplas raizes e um alto grau de afixação, como em:
+
+\begin{center}
+    \begin{tabular}{l}
+        anin\textltailn{}amj\textopeno{}ten \\
+        anin - ele \\
+        \textltailn{}am - pegar \\
+        j\textopeno{} - peixe \\
+        te - não passado \\
+        n - fazer \\
+    \end{tabular}
+\end{center}
+
+Algo que, traduzido, seria ``ele está pegando peixes'' \cite{morph-typology}.
+
+O português é uma língua fusional, o que quer dizer que existe uma tendência de um único morfema exprimir múltiplas características, sejam elas gramaticais, sintáticas, ou semânticas. Em \emph{coma}, \emph{comer + -a}, o morfema \emph{-a} especifica a pessoa, tempo, número, e modo do verbo. Quando afixado a uma base que é um substantivo, por outro lado, o morfema \emph{-a}, no geral, expressa o gênero feminino, como em \emph{menina}, \emph{menino - o + -a}. Note que, neste exemplo, a base é \emph{menino}, onde \emph{o} é uma vogal temática e a marca de gênero é o morfema zero. No português, o gênero gramatical feminino tem o morfema \emph{-a} como marca, em oposição ao morfema zero, que marca o gênero gramatical masculino. Este tipo de idiossincrasia pode representar uma dificuldade para a geração de uma representação de boa qualidade para um dado morfe.
 
 \section{Morfessor}
 O Morfessor \cite{creutz-lagus-2002-unsupervised,Creutz04inductionof,Creutz05inducingthe,Creutz05unsupervisedmorpheme,creutz-lagus-2007-unsupervised} é uma família de algoritmos não supervisionados que atacam o problema da segmentação morfológica, ou seja, a quebra de palavras em seus morfemas. Morfessor também é o nome pelo qual sua implementação em software é conhecida, cuja última versão é a 2.0 \cite{Virpioja2013Morfessor2P} e estende o algoritmo conhecido como Morfessor Baseline \cite{creutz-lagus-2002-unsupervised, Creutz05unsupervisedmorpheme}.
 
-Estes algoritmos são modelos probabilísticos que induzem a criação de um modelo de linguagem de forma não supervisionada e executam um algoritmo de busca gulosa para encontrar o léxico (conjunto de morfes) e segmentações ótimos \cite{Creutz05unsupervisedmorpheme}. É importante desambiguar o termo \emph{modelo de linguagem}; neste contexto, diferentemente de \cite{a-neural-probabilistic-lm}, o modelo de linguagem referido é um vocabulário (ou \emph{léxico}) de morfes e uma gramática, induzidos por aprendizado não-supervisionado.
+O Morfessor Baseline consiste em um modelo probabilístico que induz a criação de um modelo de linguagem de forma não supervisionada e, em seu treinamento, executa um algoritmo de busca gulosa para encontrar o léxico (conjunto de morfes) e segmentações ótimos \cite{Creutz05unsupervisedmorpheme}. Esclarecemos que o termo \emph{modelo de linguagem}, neste contexto, diferentemente de \citet{a-neural-probabilistic-lm}, é um vocabulário (ou \emph{léxico}) de morfes e uma gramática, induzidos por aprendizado não-supervisionado.
 
-Lembramos que a tarefa de segmentação morfológica é muito difícil, mesmo para anotadores humanos, e que o Morfessor é meramente uma ferramenta automática, longe da qualidade de um analisador morfológico feito à mão.
 
+Lembramos que a tarefa de segmentação morfológica é muito difícil, mesmo para anotadores humanos, e que o Morfessor é meramente uma ferramenta automática, longe da qualidade de um sistema de regras feito à mão. Tomemos por exemplo a palavra \emph{superinteressante}. Um anotador humano a quebraria da seguinte forma:
+
+\begin{center}
+    \begin{tabular}{l}
+         super- \rightarrow{} prefixo \\
+         interess- \rightarrow{} base \\
+         -ante \rightarrow{} sufixo nominal agentivo
+    \end{tabular}
+\end{center}
+
+Um modelo treinado pelo Morfessor realiza a seguinte segmentação:
+
+\begin{center}
+    super-interessa-nte
+\end{center}
+
+Esse modelo  apresenta dificuldade nesse caso, possivelmente por conta da alomorfia do sufixo nominal agentivo, que pode se manifestar como \emph{-ante}, \emph{-ente}, ou \emph{-inte}.
 
 \section{Algoritmos de segmentação em sub-palavras}
 \subsection{Byte Pair Encoding}
+Popularizado por \cite{sennrich-etal-2016-neural}, o algoritmo Byte Pair Encoding, ou BPE, consiste em inicializar um vocabulário com todos os unigramas de caractere de um corpus, e subsequentemente aumentar o vocabulário inicial com as junções de pares de n-gramas mais frequentes, até que o vocabulário atinja um tamanho pré-determinado. Com o vocabulário pronto, a segmentação de uma palavra é feita de acordo com a ordem de junções encontrada na  construção do vocabulário.
+
+\begin{algorithm}
+    \caption{Byte-pair encoding}\label{alg:bpe}
+    \begin{algorithmic}[1]
+    \State Entrada: conjunto de strings $D$, tamanho de vocabulário k
+    \Procedure{BPE}{$D,k$}
+        \State $V\gets \text{Todos os caracteres únicos em $D$}$
+        \While{$\lvert V \rvert < k$}
+            \State $t_{L}, t_{R} \gets \text{Bigrama mais frequente em $D$}$
+            \State $t_{NOVO} \gets t_{L} + t_{R}$
+            \State $V \gets V + [t_{NOVO}]$
+            \State \text{Substitua cada ocorrência de $t_{L},t_{R}$ em $D$ por $t_{NOVO}$}
+        \EndWhile
+    \EndProcedure
+    \end{algorithmic}
+\end{algorithm}
 
 \subsection{WordPiece}
+O WordPiece \cite{Wu2016GooglesNM} é muito similar ao BPE. A diferença é que a construção do vocabulário é feita através da resolução de um problema de otimização: dado um corpus de treinamento e um número desejado de tokens $D$, seleciona-se $D$ elementos de tal forma que o corpus resultante, ao ser segmentado pelo modelo, seja mínimo em seu número de elementos.
+
 
 \section{BERT}
+BERT é um modelo de linguagem que tira vantagem do mecanismo de atenção de \emph{transformers} para aprender representações de palavras. BERT se distingue dos modelos ELMo \cite{peters-etal-2018-deep} e GPT \cite{Radford2018ImprovingLU} utilizando contextos à esquerda e à direita em conjunto, usando como objetivo de treinamento a tarefa de MLM, ou modelagem de linguagem com mascaramento, inspirados pela tarefa Cloze \cite{Taylor1953ClozePA}, que consiste em ocultar uma palavra em uma frase e verificar a capacidade de uma pessoa preencher a lacuna deixada. Um exemplo da tarefa pode ser visto na figura \ref{fig:cloze}.
 
+\begin{figure}
+    \caption{Exemplo de instância da tarefa Cloze.}
+    \begin{center}
+        \includesvg{figuras/cloze.svg}
+    \end{center}
+    \label{fig:cloze}
+\end{figure}
+
+No lugar da lacuna, a tarefa MLM insere o token especial \emph{[MASK]}. O modelo também usa outros tokens especiais para marca de início de frase (\emph{[CLS]}), fim de frase (\emph{[SEP]}), e de \emph{enchimento}, ou \emph{padding} (\emph{[PAD]}).
+
+O modelo também é treinado com a tarefa NSP, ou predição de próxima frase, em que o modelo é alimentado com pares de frases, acompanhado de um rótulo que atesta se uma frase segue a outra ou não.
+
+Outra contribuição importante de \cite{devlin-etal-2019-bert} é apresentar a flexibilidade de representações pré-treinadas, que permitem que um modelo treinado com a mesma arquitetura possa ser re-utilizado para várias outras tarefas, através apenas da substituição das camadas de saída e a realização do ajuste fino, ou \emph{fine-tuning}, dos parâmetros do modelo.
+
+
+\section{ALBERT}
+\citet{Lan2020ALBERT} apresentam em seu trabalho duas técnicas para redução de número de parâmetros para modelos pré-treinados. A primeira delas é a fatoração da matriz de \emph{embeddings} em duas matrizes menores: ao invés de projetar os vetores \emph{one-hot} do vocabulário diretamente na dimensionalidade das camadas ocultas, eles são projetados primeiro em um espaço dimensional menor e, em seguida, projetados no espaço oculto. A segunda técnica consiste no compartilhamento de parâmetros ao longo das camadas, que reduz marginalmente a performance do modelo, mas diminui drasticamente o número de parâmetros.
+
+
+\chapter{Trabalhos Relacionados}
+ \citet{Hofmann2021SuperbizarreIN} operam sob a hipótese de que o modelo BERT é capaz de aprender boas representações para palavras que estejam por inteiro no vocabulário de segmentação, ou cujo significado possa ter sido capturado através da co-ocorrência de seus segmentos, caso em que pouco importaria se a delimitação desses segmentos tivesse sentido linguístico. Por exemplo, \emph{supera + \#\#migo} tem uma segmentação inválida do ponto de vista morfológico, mas se esses segmentos co-ocorressem frequentemente no pré-treino, o modelo seria capaz de aprender uma representação de boa qualidade. Entretanto, para palavras que não apareçam no corpus de pré-treino, o modelo precisaria então computar uma representação a partir de seus segmentos, o que, intuitivamente, seria mais simples se esses segmentos tivessem um embasamento linguístico.
+ 
+ \begin{sloppypar}
+ A segmentação utilizada por \citet{Hofmann2021SuperbizarreIN} consiste em iterativamente remover afixos de uma palavra, recuperar a base através de regras morfo-ortográficas, e concatenar os afixos encontrados à raiz usando hífens para separá-los. Os afixos vêm de uma lista de prefixos e sufixos conhecidos e que também podem ser encontrados no vocabulário do WordPiece. Nós pré-treinamos um modelo de linguagem criando um vocabulário com morfes obtidos através de um modelo Morfessor. Não propomos nos limitar à morfologia derivacional, de forma que capturar todas as regras de adequação morfo-ortográfica do português para aplicar correções se torna uma empreitada de alto custo. Tomamos uma abordagem de segmentação mais simples, utilizando a segmentação nos dada pelo modelo Morfessor e extraindo apenas os prefixos, quando possível, a partir de uma lista de prefixos. Mantivemos a estratégia do WordPiece de prefixar os segmentos com ``\#\#'', mas julgamos indesejável manter no modelo duas representações para uma mesma base---exemplificamos: em um corpus em que ocorrem as palavras \emph{divertido} e \emph{superdivertido}, a primeira seria segmentada como $divert, \text{\#}\text{\#}ido$, enquanto a segunda apresentaria a segmentação $super, \text{\#}\text{\#}divert, \text{\#}\text{\#}ido$. A mesma base, \emph{divert}, teria duas representações no modelo, apesar de que nas duas situações, ela tem o mesmo significado.
+\end{sloppypar}
+
+\citet{cotterell-etal-2016-morphological-segmentation} apresentam o que eles chamam de \emph{segmentação canônica}, a segmentação de palavras levando em conta mudanças ortográficas. De acordo com esta definição, a segmentação canônica de \emph{belezinha}, por exemplo, seria \emph{belo + eza + inho + a}. Tal forma de segmentação seria ideal para que um modelo BERT aprendesse uma representação de boa qualidade para cada morfe, com possíveis obstáculos encontrados na alomorfia  e na sobrecarga de significados que um morfe pode apresentar. \citet{cotterell-schutze-2018-joint} apresentam um modelo supervisionado para resolver essa tarefa. Entretanto, como se trata de um modelo supervisionado, é necessário um conjunto de dados com segmentações canônicas, a partir do qual o modelo possa ser treinado. Como não dispomos de tal conjunto de dados em português, optamos por uma abordagem utilizando aprendizado não supervisionado.
 
 \chapter{Materiais e Métodos}
-\section{Segmentação baseada em morfemas}
-\section{Modelo de Linguagem com Mascaramento}
-\subsection{Corpus de treino}
-O corpus utilizado para o treinamento dos modelos foi um \emph{dump} da Wikipedia \footnote{https://dumps.wikimedia.org/}. O texto foi extraído e limpo utilizando a ferramenta \emph{WikiExtractor} \footnote{https://github.com/attardi/wikiextractor/}. A seguir, utilizamos \emph{BlingFire} \footnote{https://github.com/microsoft/BlingFire} para criar um dataset de uma frase por linha. Para o pré-treino dos modelos, utilizamos apenas 15\% deste dataset.
+Este capítulo informa as ferramentas, bibliotecas, frameworks e conjuntos de dados que utilizamos no nosso trabalho, e também descreve como os empregamos para realizar nossos experimentos.
+
+\section{Ambiente}
+A ferramenta mais básica utilizada em nossos experimentos é a linguagem de programação Python \cite{VanRossum2009}. Sua escolha se dá pelo grande ecossistema de bibliotecas voltadas à comunidade científica---em nosso caso mais específico, à prática de aprendizado de máquina.
+
+O treino de modelos de linguagem baseados em \emph{transformers} é proibitivo: os últimos e melhores modelos, como o GPT-3 \cite{brown2020}, são treinados utilizando recursos computacionais em alta escala---conjuntos de dadso de centenas de Gigabytes, modelos utilizando centenas de bilhões de parâmetros, exigindo \emph{clusters} de GPUs para seu treinamento. Desta forma, este tipo de empreitada não é acessível à maior parte da comunidade acadêmica. Tendo isso em consideração, utilizamos em nossos experimentos o modelo ALBERT, mais simples de treinar que o modelo BERT, e limitamos o tamanho do nosso conjunto de dados de treino, com o intuito de treinar modelos em tempo razoável. Para executar o treinamento dos modelos, tanto pré-treino quanto posterior \emph{fine-tuning}, utilizamos GPUs disponíveis no ambiente Google Colab \cite{Bisong2019}.
+
+\section{Segmentação baseada em modelo Morfessor}\label{custom-tokenizer}
+Componente central de nossos experimentos, descrevemos aqui como nosso segmentador funciona, e em seguida discutimos detalhes de sua implementação.
+
+Primeiramente, tokenizamos o texto por espaços e o normalizamos, o que quer dizer: aplicamos normalização unicode NFKC \footnote{\url{https://www.unicode.org/reports/tr15/}}, transformamos o texto em letras minúsculas, e reduzimos sequências de espaços a um espaço apenas. Damos cada palavra como entrada a um modelo Morfessor, obtendo os morfes candidatos na saída. Os chamamos ``candidatos'', pois não sabemos se eles são linguisticamente corretos. Nós seguimos a mesma estratégia de outros segmentadores como o BPE e o WordPiece, prefixando os segmentos após o primeiro com ``\#\#'', mas com uma diferença: não desejamos ter mais de uma representação para bases prefixadas. Por exemplo, tomemos ``superinteressante'' e ``interessante'': a primeira palavra seria segmentada por nosso segmentador como \emph{super + \#\#interessa + \#\#nte}; já a segunda seria segmentada como \emph{interessa + \#\#nte}. Percebemos que ``interessa'' e ``\#\#interessa'' têm o mesmo significado, de tal forma que o modelo precisaria encontrar os mesmos pesos para duas representações diferentes. Para tentar resolver esse problema, nós compilamos o que julgamos ser uma lista de prefixos produtivos do português \ref{tbl:prefixos}---quando um destes prefixos é o primeiro morfe candidato de uma palavra, não prefixamos o segmento seguinte com ``\#\#'', de forma que a palavra ``superinteressante'' seja segmentada como \emph{super + interessa + \#\#nte}.
+
+\begin{table}[]
+    \caption{Lista de prefixos produtivos do português}
+    \centering
+        \begin{tabular}{lll}
+        \hline
+        a      & hiper & pro   \\
+        anti   & in    & pró   \\
+        bi     & mega  & pós   \\
+        circum & micro & pos   \\
+        contra & mini  & re    \\
+        des    & mono  & retro \\
+        em     & nano  & sobre \\
+        en     & nonea & sub   \\
+        es     & octa  & super \\
+        ex     & pan   & tetra \\
+        entre  & penta & tri   \\
+        hepta  & pre   & ultra \\
+        hexa   & pré   &       \\ \hline
+        \end{tabular}
+    \label{tbl:prefixos}
+\end{table}
+
+\begin{sloppypar}
+O modelo Morfessor treinado em português que utilizamos foi obtido através da biblioteca Polyglot \cite{Al-Rfou2020}. Para a segmentação, utilizamos um pré-tokenizador personalizado, no contexto da biblioteca Tokenizers \cite{anthony_moi_2022_5862127}. Por uma questão de implementação, também precisamos gerar um vocabulário fixo de morfes, necessário para que o modelo tenha uma representação numérica para cada token. Para gerar este vocabulário,  instanciamos um tokenizador do tipo "WordLevel"; selecionamos, heuristicamente, um tamanho de vocabulário de 70.000 tokens; e utilizamos sua rotina de treino, usando o mesmo corpus usado para o pré-treino do modelo (ver \ref{mlm}) como entrada. Para efetivamente utilizar o tokenizador em conjunto com a biblioteca Transformers \cite{thomas_wolf_2021_5045610}, precisamos adaptar os métodos da classe do tokenizador da biblioteca Tokenizers à interface do tokenizador da biblioteca Transformers. Isso foi necessário, pois o tokenizador da biblioteca Transformers não oferecia a flexibilidade de personalização de que necessitávamos. Nosso código pode ser encontrado em nosso repositório \footnote{\url{https://gitlab.com/mwesthelle/putting-the-pieces-together}}.
+\end{sloppypar}
+
+\section{Pré-treino}\label{mlm}
+O corpus utilizado para o pré-treino dos modelos foi um \emph{dump} da Wikipedia\footnote{\url{https://dumps.wikimedia.org/}}. O texto foi extraído e limpo utilizando a ferramenta \emph{WikiExtractor}\footnote{\url{https://github.com/attardi/wikiextractor/}}. A seguir, utilizamos \emph{BlingFire}\footnote{\url{https://github.com/microsoft/BlingFire}} para criar um conjunto de dados de uma frase por linha. Para o pré-treino dos modelos, dividimos os dados em conjuntos de teste e validação, usando uma razão de 9:1. Destes conjuntos, extraímos apenas 15\% dos dados, para acelerar o tempo de treino. Nosso conjunto de dados apresenta 48.544.408 tokens em sua totalidade.
+
+Para realizar o pré-treino, nós tokenizamos os conjuntos de treino e validação previamente, uma vez utilizando o tokenizador WordPiece treinado por \citet{souza2020}, incluso no modelo BERTimbau \footnote{Disponível em \url{https://huggingface.co/neuralmind/bert-base-portuguese-cased}}; e outra vez utilizando o nosso tokenizador, descrito em \ref{custom-tokenizer}. Armazenamos o resultado da tokenização dos conjuntos em formato \emph{Parquet} \cite{parquet}, e utilizamos a biblioteca Datasets para fazer a carga dos mesmos na execução do pré-treino. Este pré-processamento foi necessário devido à grande quantidade de memória física necessária para carregar o corpus. A compressão obtida pelo uso do formato \emph{parquet} e a carga utilizando a biblioteca Datasets permite o uso de grandes conjuntos de dados utilizando pouca memória física.
+
+Seguindo \citet{Liu2019RoBERTaAR}, não utilizamos a tarefa de predição de próxima sentença (NSP) no treinamento do modelo; usamos apenas modelagem de linguagem com mascaramento (MLM). Em \citet{devlin-etal-2019-bert}, 90\% dos passos de pré-treino são realizados utilizando tamanho de sequência de 128 tokens. Nos 10\% restantes, o tamanho de sequência utilizado é de 512 tokens. Isto é feito para acelerar o treino, pois o mecanismo de atenção apresenta complexidade quadrática relativa ao tamanho da sequência. Nós usamos uma abordagem parecida; a diferença é que nós treinamos o modelo usando tamanho de sequência 128 durante 5 épocas, o que levou 2 dias para cada modelo, e aumentamos o tamanho de sequência para 512 tokens para um novo treinamento por 1 época, o que também levou 2 dias para cada modelo. Uma época consiste em 8.494 passos de otimização, usando lotes de 256 exemplos cada, somando um total de 2.174.602 frases de exemplo---os exemplos restantes que não se acumulam ao tamanho de um lote inteiro são descartados. A GPU empregada no treinamento destes modelos foi a A100 de 40GB de memória, disponível através do Google Colab. Outra técnica utilizada para acelerar o treinamento de nossos modelos foi o uso de precisão mista \cite{micikevicius2018mixed}. A ideia é armazenar as ativações do modelo em ponto flutuante de meia-precisão (16 bits, ao invés de 32 bits) para economizar memória e acelerar computações, fazendo a conversão de volta para 32 bits no passo de otimização. A implementação desta técnica vem pronta através da biblioteca Transformers. Treinamos um modelo ALBERT, com \emph{embeddings} de 128 dimensões, 12 camadas ocultas com 4096 dimensões, e 64 cabeças de atenção. O otimizador utilizado em todos os nossos experimentos foi o AdamW \cite{loshchilov2018decoupled}, com $\beta_1 = 0.9$, $\beta_2 = 0.999$, e $\epsilon = \num{1e-8}$. No pré-treino, usamos uma taxa de aprendizado de \num{5e-5}.
 
 \section{Tarefas de avaliação}
+A seguir, listamos as tarefas e conjuntos de dados que usamos para comparar nosso método com o WordPiece, o nosso baseline.
+
 \subsection{Classificação de Texto}
-\subsubsection{Tarefa}
-\subsubsection{Datasets}
-\subsection{Recognizing Textual Entailment}
-\subsubsection{Tarefa}
-\subsubsection{Dataset}
-\subsection{Question Answering}
-\subsubsection{Tarefa}
-\subsubsection{Dataset}
+Classificação de texto consiste em associar amostras de texto a rótulos, com amplas aplicações: identificar se uma avaliação de um produto é positiva ou negativa, discernir uma notícia falsa de uma notícia verdadeira, ou ainda associar um texto a um assunto.
+
+\textbf{Fake.Br}
+Disponibilizado por \cite{fakebr:18}, o conjunto de dados Fake.Br contém 7.200 notícias, igualmente distribuídas entre duas classes: falsas e verdadeiras. Sua proposta é servir de ferramenta na pesquisa de identificação de notícias falsas.
+
+\textbf{Folha}
+Encontrado em \cite{folha-dataset}, este é um conjunto de dados disponibilizado na plataforma Kaggle, obtido através de web crawling do site do jornal Folha de São Paulo. Ele é composto de 167.053 notícias e apresenta muitas classes, muitas das quais são difíceis de mapear para um assunto específico, e.g. \emph{ilustrada}, que provavelmente faz alusão ao fato de a página conter ilustrações ou imagens. Nós pré-processamos este conjunto de dados, escolhendo cinco classes com um número expressivo de exemplos que julgamos terem nomes representativos de seus assuntos:
+\begin{itemize}
+    \item cotidiano - 16.967 amostras
+    \item esporte - 19.730 amostras
+    \item mercado - 20.970 amostras
+    \item mundo - 17.130 amostras
+    \item poder - 22.022 amostras
+\end{itemize}
+
+Ao todo, mantivemos 96.819 amostras. Podemos visualizar a distribuição final de classes na figura \ref{fig:folha_hist}.
+
+\begin{figure}[h]
+    \caption{Histograma normalizado de classes do conjunto de dados Folha, após pré-processamento.}
+    \begin{center}
+        \includesvg[width=24em]{figuras/folha_histplot.svg}
+    \end{center}
+    \label{fig:folha_hist}
+\end{figure}
+
+
+\subsection{Reconhecimento de Implicação Textual e Paráfrases}
+Na tarefa de Reconhecimento de implicação textual e paráfrases, são dados pares de frases, e é preciso identificar se a segunda é implicação da primeira, ou se ambas as frases podem ser inferidas uma a partir da outra, o que categoriza uma paráfrase. Desta forma, há três rótulos possíveis para um par de frases: ``implicação'', ``paráfrase'', e ``nenhum''.
+
+\textbf{ASSIN}
+O conjunto de dados utilizado foi o ASSIN \cite{fonseca2016assin}, como encontrado através da biblioteca Datasets. 10.000 amostras compõem o conjunto, metade das quais está em Português brasileiro, enquanto a outra metade está em Português europeu. O conjunto ainda está dividido em \emph{treino} (5.000 amostras), \emph{teste} (4.000 amostras) e \emph{validação} (1.000 amostras). A figura \ref{fig:assin_hist} mostra distribuição de classes do conjunto de dados, e ela nos permite perceber que há um grande desbalanço de classes. A esmagadora maioria dos pares de frases não são relacionados, enquanto uma parcela muito pequena contempla paráfrases.
+
+\begin{figure}[h]
+    \caption{Histograma normalizado de classes do conjunto de dados ASSIN.}
+    \begin{center}
+        \includesvg[width=24em]{figuras/assin_histplot.svg}
+    \end{center}
+    \label{fig:assin_hist}
+\end{figure}
+
+
+\subsection{Question-answering NLI}
+\emph{Question-answering NLI}, ou inferência de linguagem natural para respostas a perguntas, é a tarefa de predizer se, dados um par pergunta e frase, a frase é uma possível resposta à pergunta.
+
+\textbf{PLUE/QNLI} Para esta tarefa, utilizamos o conjunto de dados QNLI contido no PLUE \cite{Gomes2020}, criado a partir de tradução automática do GLUE \cite{wang-etal-2018-glue} e disponível através da biblioteca Datasets. Ele apresenta 57.084 exemplos de cada classe, \emph{entailment} e \emph{not entailment}. O conjunto ainda contém 5.740 exemplos não classificados, descartados para nossos experimentos.
+
+
+\section{Fine-tuning}
+Para realização das rodadas de \emph{fine-tuning}, treinamos nossos modelos por 10 épocas nos conjuntos de dados, usando validação cruzada k-fold para evitar possíveis viéses induzidos pelos dados. Utilizamos valores de $k$ menores para os treinamentos nos conjuntos de dados Folha e QNLI, devido ao longo tempo que estes treinamentos levaram. Os tempos de treinamento e valores de $k$ podem ser encontrados na tabela \ref{tbl:runtime}.
+
+\begin{table}[]
+    \caption{Tempos de execução e $k$ utilizado para validação cruzada k-fold}
+    \centering
+        \begin{tabular}{lll}
+        \hline
+        Conjunto de dados & Tempo de uma rodada (minutos) & Valor de k para validação cruzada \\ \hline
+        ASSIN RTE  & 27                  & 5                                 \\
+        Fake.Br     & 44                  & 5                                 \\
+        Folha       & 493                 & 3                                 \\
+        QNLI        & 564                 & 3                                
+        \end{tabular}
+    \label{tbl:runtime}
+\end{table}
+
+Os treinamentos foram executados utilizando o tamanho de sequência máximo 256, exceto pelo treinamento no conjunto de dados ASSIN---neste caso, utilizamos o tamanho de sequência 128, pois os exemplos neste conjunto de dados são curtos: segmentados utilizando o nosso método, o maior deles têm 107 tokens. No caso de outros conjuntos de dados, como o Fake.Br, os exemplos acabam sendo truncados. Nosso método de segmentação é mais granular, de forma que os exemplos são tokenizados em mais tokens e, por consequência, sofrem em maior grau o efeito do truncamento. Como pode ser visto na tabela \ref{tbl:trunc}, a frase capturada por nossa segmentação acaba sendo mais curta. Para efeitos de ilustração, utilizamos neste exemplo um tamanho de sequência de 32 tokens.
+
+\begin{table}[h]
+\caption{Truncamento em exemplo do conjunto de dados Fake.Br}
+\begin{tabular}{p{0.45\linewidth} | p{0.45\linewidth}}
+\hline
+WordPiece                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              & Nosso método                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 \\ \hline
+{[}CLS{]} + jornal + inglês + destaca + exposição + com + homem + nu + : + " + o + bras + \#\#il + é + no + \#\#je + \#\#nto + " + . + a + famosa + exposição + do + " + homem + nu + sendo + tocado + por + uma + criança + de + 4 + anos + " + ganhou + reperc + \#\#urs + \#\#são + mundial + . + o + inglês + the + su + \#\#n + publicou + uma + matéria + com + o + seguinte + título + : + " + ang + \#\#er + as + g + \#\#irl + , + fo + \#\#ur + , + is + ur + \#\#ge + \#\#d + to + touch + a + na + \#\#ke + \#\#d + man + at + contro + \#\#vers + \#\#ial + art + show + " + " + garota + de + quatro + anos + é + convidada + a + tocar + um + homem + em + um + contro + \#\#verso + show + de + arte + " + abaixo + \textbf{alguns + trechos + da + matéria + publicada + no + the + su + \#\#n + : + " + um + desempenho + artístico + nu + provocou + ind + \#\#ignação + depois + que + uma + criança + foi + encora + \#\#jada} + {[}SEP{]} & {[}CLS{]} + jornal + ing + \#\#lê + \#\#s + destaca + ex + posição + com + home + \#\#m + nu + : + " + o + brasil + é + no + \#\#je + \#\#nto + ". + a + famosa + ex + posição + do + " + home + \#\#m + nu + s + \#\#endo + toca + \#\#do + por + uma + cria + \#\#nça + de + 4 + ano + \#\#s + " + ganho + \#\#u + re + per + \#\#cur + \#\#s + \#\#são + mund + \#\#ial + . + o + ing + \#\#lê + \#\#s + the + s + \#\#un + public + \#\#ou + uma + matéria + com + o + segui + \#\#nte + título + : + " + ang + \#\#er + a + s + girl + , + four + , + is + urg + \#\#ed + to + touch + a + na + \#\#ke + \#\#d + man + at + contr + \#\#over + \#\#s + \#\#ial + art + s + \#\#how + " + " + garo + \#\#ta + de + qua + \#\#tro + ano + \#\#s + é + convida + \#\#da + a + toca + \#\#r + um + home + \#\#m + em + um + con + \#\#tro + \#\#verso + s + \#\#how + de + arte + " + a + baixo + {[}SEP{]}
+\end{tabular}
+\label{tbl:trunc}
+\end{table}
+
 
 \chapter{Resultados}
+Neste capítulo, avaliamos o desempenho dos modelos treinados utilizando nosso método em comparação a modelos treinados empregando o WordPiece, e apresentamos uma discussão de nossas descobertas.
+
+Em primeira instância, avaliamos os experimentos medindo F1 macro. Nossos resultados, encontrados na tabela \ref{tbl:f1macro}, mostram resultados mistos pela métrica $F1$.
+
+Realizamos o teste de McNemar, um teste pareado não paramétrico, para verificar a significância estatística de nossos resultados. A tabela \ref{tbl:significance} mostra que quase todos os nossos resultados apresentam \emph{p-values} muito próximos de zero, exceto pelo experimento com o conjunto de dados Fake.Br.
+
+\begin{table}[]
+    \caption{Avaliação de experimentos utilizando métrica F1 macro}
+    \centering
+        \begin{tabular}{lll}
+        \hline
+        Conjunto de dados & Segmentação  & F1 macro \\ \hline
+        ASSIN RTE         & WordPiece    & 0.484    \\
+                          & Nosso método & \textbf{0.493}    \\ \hline
+        Fake.Br           & WordPiece    & 0.953    \\
+                          & Nosso método & \textbf{0.955}    \\ \hline
+        Folha             & WordPiece    & 0.925    \\
+                          & Nosso método & \textbf{0.930}    \\ \hline
+        QNLI              & WordPiece    & 0.624    \\
+                          & Nosso método & \textbf{0.635}    \\ \hline
+        \end{tabular}
+    \label{tbl:f1macro}
+\end{table}
+
+Reportamos ainda o coeficiente Kappa de Cohen, que mede concordância entre anotadores. Neste caso, medimos a concordância entre as predições pareadas de ambos os modelos para cada conjunto de dados. Como se observa na tabela \ref{tbl:kappa}, há uma correlação direta entre o desempenho dos classificadores em um dado conjunto de dados, e o coeficiente Kappa; os modelos apresentam dificuldades diferentes em conjuntos de dados em que seu desempenho é insatisfatório.
+
+\begin{table}[]
+    \caption{Coeficiente Kappa de Cohen}
+    \centering
+        \begin{tabular}{ll}
+        \hline
+        Conjunto de dados & \kappa \\ \hline
+        ASSIN RTE         & 0.34                  \\
+        Folha             & 0.90                  \\
+        Fake.Br           & 0.88                  \\
+        QNLI              & 0.32                 
+        \end{tabular}
+    \label{tbl:kappa}
+\end{table}
+
+
+
+A seguir, analisamos as matrizes de confusão obtidas a partir das predições dos modelos. As matrizes de confusão mostram que nossa segmentação morfologicamente informada apresenta resultados mistos. Entender os fatores causais destes resultados é, em si, um campo ativo de pesquisa. \citet{conneau-etal-2018-cram} propõem formas de sondar propriedades linguísticas de um modelo de linguagem baseado em LSTM \cite{Sundermeyer2012LSTMNN}. \citet{Hewitt2019ASP} mostram uma maneira de realizar esse tipo de sondagem para um modelo BERT, e \citet{chen2021probing} refinam esta abordagem. Tal técnica de abordagem é intrinsecamente ligada à arquitetura do modelo BERT e, até onde sabemos, não existe técnica similar aplicável ao modelo ALBERT. A aplicação de uma sondagem nesta linha poderia nos ajudar a explicar nossos resultados com maior assertividade. Possivelmente, o modelo pré-treinado com o nosso método tenha tido o treinamento prejudicado por conta do tamanho efetivo de sequência ser menor. Isto, por sua vez, pode ter afetado a capacidade do modelo de capturar dependências de longa distância---sentenças longas com dependências sintáticas entre elementos no início e ao fim.
+
+\begin{figure}
+    \centering
+    \caption{Matrizes de confusão para o conjunto de dados ASSIN - Reconhecimento de Implicação Textual}
+    \subfigure[Segmentação com WordPiece]{\label{fig:assin_wp_cfm}\includesvg[width=120mm]{figuras/assin_wordpiece_model_confusion_matrix.svg}}
+    \subfigure[Nossa segmentação]{\label{fig:assin_custom_cfm}\includesvg[width=120mm]{figuras/assin_custom_segmentation_model_confusion_matrix.svg}}
+    \label{fig:assin_cm}
+\end{figure}
+
+\begin{figure}
+    \centering
+    \caption{Matrizes de confusão para o conjunto de dados Fake.Br}
+    \subfigure[Segmentação com WordPiece]{\label{fig:fakebr_wp_cfm}\includesvg[width=120mm]{figuras/fake.br_wordpiece_model_confusion_matrix.svg}}
+    \subfigure[Nossa segmentação]{\label{fig:fakebr_custom_cfm}\includesvg[width=120mm]{figuras/fake.br_custom_segmentation_model_confusion_matrix.svg}}
+    \label{fig:fakebr_cm}
+\end{figure}
+
+\begin{figure}
+    \centering
+    \caption{Matrizes de confusão para o conjunto de dados Folha}
+    \subfigure[Segmentação com WordPiece]{\label{fig:folha_wp_cfm}\includesvg[width=120mm]{figuras/folha_wordpiece_model_confusion_matrix.svg}}
+    \subfigure[Nossa segmentação]{\label{fig:folha_custom_cfm}\includesvg[width=120mm]{figuras/folha_custom_segmentation_model_confusion_matrix.svg}}
+    \label{fig:folha_cm}
+\end{figure}
+
+\begin{figure}
+    \centering
+    \caption{Matrizes de confusão para o conjunto de dados PLUE/QNLI}
+    \subfigure[Segmentação com WordPiece]{\label{fig:qnli_wp_cfm}\includesvg[width=120mm]{figuras/qnli_wordpiece_model_confusion_matrix.svg}}
+    \subfigure[Nossa segmentação]{\label{fig:qnli_custom_cfm}\includesvg[width=120mm]{figuras/qnli_custom_segmentation_model_confusion_matrix.svg}}
+    \label{fig:qnli_cfm}
+\end{figure}
+
+
+\begin{table}
+    \caption{Significância estatística dos experimentos}
+    \centering
+        \begin{tabular}{ll}
+        \hline
+        Conjunto de dados & p-value  \\ \hline
+        ASSIN RTE         & \num{2.49e-3}  \\
+        Folha             & \num{2.71e-8}   \\
+        Fake.Br           & \num{4.66e-1} \\
+        QNLI              & \num{4.92e-4} 
+        \end{tabular}
+    \label{tbl:significance}
+\end{table}
+
+O \emph{p-value} do experimento com o conjunto de dados Fake.Br nos motivou a investigar o efeito do truncamento do texto neste caso. Realizamos um experimento comparando nosso segmentador e o WordPiece, usando o modelo resultante de nosso último \emph{fine-tuning}. Lembramos que originalmente realizamos validação cruzada com 5 \emph{folds}, e utilizando o \emph{fold} de \emph{holdout} relativo a este modelo, geramos predições, variando os tamanhos de sequência entre 256 e 512. A tabela \ref{tbl:fakebrseqlen} nos mostra que nosso segmentador obteve um melhor desempenho com um tamanho de sequência maior neste caso, ganhando distância do modelo utilizando o WordPiece. Um novo teste McNemar com este conjunto pareado resultou em um \emph{p-value} de \num{1.5e-3}.
+
+\begin{table}[]
+    \caption{Valores de F1 para conjunto Fake.Br, variando o tamanho de sequência}
+    \centering
+        \begin{tabular}{lll}
+                          & Tamanho de sequência: 256 & Tamanho de sequência: 512 \\
+        WordPiece         & 0.958                     & 0.948                     \\
+        Nosso segmentador & 0.958                     & 0.965                    
+    \end{tabular}
+    \label{tbl:fakebrseqlen}
+\end{table}
+
+
+\chapter{Conclusão e trabalhos futuros}
+Nosso trabalho explora como informação linguística pode afetar o desempenho de modelos pré-treinados em algumas tarefas comuns. Em uma era em que estes modelos crescem cada vez mais em números, tanto de parâmetros como de dados em que são treinados, acreditamos que a ciência linguística pode informar estes modelos, e eventualmente ajudar a torná-los mais computacionalmente acessíveis. Em trabalhos futuros, propomos a execução dos mesmo experimentos utilizando um modelo BERT, de forma a utilizar as técnicas de sondagem propostas por \citet{Hewitt2019ASP} e \citet{chen2021probing}. Também propomos o uso de um corpus maior e com maior variedade de registros de linguagem. O uso de um modelo BERT, bem como o emprego de uma maior massa de dados, implicaria em tempo de treinamento muito maior, ou recursos computacionais mais poderosos do que dispusemos para a realização deste trabalho.
 
 \bibliographystyle{abntex2-alf}
 \bibliography{biblio}
